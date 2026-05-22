@@ -29,14 +29,14 @@ public record GatheringDetailResponse(
         @Schema(description = "모임 상태", example = "RECRUITING")
         GatheringStatus status,
 
-        @Schema(description = "방장 회원 ID", example = "1")
-        Long hostId,
+        @Schema(description = "내가 방장인지 여부", example = "false")
+        boolean isHost,
 
         @Schema(description = "현재 참여자 수", example = "3")
         int participantCount
 ) {
 
-    public static GatheringDetailResponse from(Gathering gathering, int participantCount) {
+    public static GatheringDetailResponse from(Gathering gathering, int participantCount, boolean isHost) {
         return new GatheringDetailResponse(
                 gathering.getId(),
                 gathering.getName(),
@@ -45,7 +45,7 @@ public record GatheringDetailResponse(
                 gathering.getDueDate(),
                 gathering.getDescription(),
                 gathering.getStatus(),
-                gathering.getHost().getId(),
+                isHost,
                 participantCount
         );
     }

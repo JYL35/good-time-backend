@@ -49,6 +49,10 @@ public class Gathering {
         this.description = description;
     }
 
+    public void match() {
+        this.status = GatheringStatus.MATCHED;
+    }
+
     public boolean isHost(Long memberId) {
         return host.getId().equals(memberId);
     }

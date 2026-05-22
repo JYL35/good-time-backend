@@ -8,10 +8,10 @@ import com.wooteco.haveagoodtime.dto.response.GatheringSummaryResponse;
 import com.wooteco.haveagoodtime.dto.response.ParticipantResponse;
 import com.wooteco.haveagoodtime.security.CustomOAuth2User;
 import com.wooteco.haveagoodtime.service.GatheringService;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -51,9 +51,10 @@ public class GatheringController {
     })
     @SecurityRequirements
     public ResponseEntity<GatheringDetailResponse> getGathering(
-            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id
-    ) {
-        return ResponseEntity.ok(gatheringService.getGathering(id));
+            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
+        Long memberId = currentUser != null ? currentUser.getMemberId() : null;
+        return ResponseEntity.ok(gatheringService.getGathering(id, memberId));
     }
 
     @PostMapping
@@ -80,9 +81,10 @@ public class GatheringController {
             @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없음",
                     content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<Void> updateGathering(@Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
-                                                @RequestBody GatheringUpdateRequest request,
-                                                @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
+    public ResponseEntity<Void> updateGathering(
+            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
+            @RequestBody GatheringUpdateRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
         gatheringService.updateGathering(id, request, currentUser.getMemberId());
         return ResponseEntity.ok().build();
     }
@@ -97,8 +99,9 @@ public class GatheringController {
             @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없음",
                     content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<Void> deleteGathering(@Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
-                                                @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
+    public ResponseEntity<Void> deleteGathering(
+            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
         gatheringService.deleteGathering(id, currentUser.getMemberId());
         return ResponseEntity.noContent().build();
     }
@@ -107,14 +110,17 @@ public class GatheringController {
     @Operation(summary = "모임 참여", description = "로그인한 사용자가 모임에 참여합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "모임 참여 성공"),
+            @ApiResponse(responseCode = "400", description = "모집 중이 아닌 모임",
+                    content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 필요"),
             @ApiResponse(responseCode = "404", description = "모임 또는 회원을 찾을 수 없음",
                     content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "이미 참여한 모임",
                     content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<Void> participate(@Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
-                                            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
+    public ResponseEntity<Void> participate(
+            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
         gatheringService.participate(id, currentUser.getMemberId());
         return ResponseEntity.ok().build();
     }
@@ -123,18 +129,21 @@ public class GatheringController {
     @Operation(summary = "모임 참여 취소", description = "로그인한 사용자의 모임 참여를 취소합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "모임 참여 취소 성공"),
+            @ApiResponse(responseCode = "400", description = "모집 중이 아닌 모임",
+                    content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 필요"),
             @ApiResponse(responseCode = "404", description = "모임, 회원 또는 참여 정보를 찾을 수 없음",
                     content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<Void> cancelParticipation(@Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
-                                                    @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
+    public ResponseEntity<Void> cancelParticipation(
+            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
         gatheringService.cancelParticipation(id, currentUser.getMemberId());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/participate")
-    @Operation(summary = "모임 참여자 목록 조회", description = "모임에 참여한 사용자 목록을 조회합니다.")
+    @Operation(summary = "모임 참여자 목록 조회", description = "RECRUITING 상태면 익명, MATCHED 상태면 닉네임 공개.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "참여자 목록 조회 성공"),
             @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없음",
@@ -142,8 +151,7 @@ public class GatheringController {
     })
     @SecurityRequirements
     public ResponseEntity<List<ParticipantResponse>> getParticipants(
-            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id
-    ) {
+            @Parameter(description = "모임 ID", example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(gatheringService.getParticipants(id));
     }
 }
