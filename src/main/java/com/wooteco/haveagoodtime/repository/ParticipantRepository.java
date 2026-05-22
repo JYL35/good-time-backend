@@ -16,5 +16,9 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
     boolean existsByGatheringAndMember(Gathering gathering, Member member);
 
+    boolean existsByGatheringAndMember_Id(Gathering gathering, Long memberId);
+
     int countByGathering(Gathering gathering);
+
+    void deleteByGathering(Gathering gathering);
 }

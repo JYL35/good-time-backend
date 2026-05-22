@@ -21,7 +21,7 @@ public class Participant {
     private Gathering gathering;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id")
+    @JoinColumn(name = "member_id")
     private Member member;
 
     private LocalDateTime joinTime;

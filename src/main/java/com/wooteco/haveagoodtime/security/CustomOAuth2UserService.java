@@ -27,7 +27,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         Member member = memberRepository.findByGithubUserId(githubUserId)
                 .map(existing -> {
-                    existing.update(crewNickname, githubProfileImageUrl);
+                    existing.updateGithubProfileImageUrl(githubProfileImageUrl);
                     return existing;
                 })
                 .orElseGet(() -> memberRepository.save(

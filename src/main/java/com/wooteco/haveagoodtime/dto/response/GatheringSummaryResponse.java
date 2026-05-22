@@ -17,6 +17,9 @@ public record GatheringSummaryResponse(
         @Schema(description = "모집 인원", example = "6")
         int headCount,
 
+        @Schema(description = "현재 참여자 수", example = "3")
+        int participantCount,
+
         @Schema(description = "모임 일시", example = "2026-05-30T19:00:00")
         LocalDateTime gatheringDatetime,
 
@@ -27,11 +30,12 @@ public record GatheringSummaryResponse(
         GatheringStatus status
 ) {
 
-    public static GatheringSummaryResponse from(Gathering gathering) {
+    public static GatheringSummaryResponse from(Gathering gathering, int participantCount) {
         return new GatheringSummaryResponse(
                 gathering.getId(),
                 gathering.getName(),
                 gathering.getHeadCount(),
+                participantCount,
                 gathering.getGatheringDatetime(),
                 gathering.getDueDate(),
                 gathering.getStatus()

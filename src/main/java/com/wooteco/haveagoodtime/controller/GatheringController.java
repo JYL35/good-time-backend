@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -65,7 +66,7 @@ public class GatheringController {
             @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음",
                     content = @Content(mediaType = ERROR_MEDIA_TYPE, schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<Void> createGathering(@RequestBody GatheringCreateRequest request,
+    public ResponseEntity<Void> createGathering(@Valid @RequestBody GatheringCreateRequest request,
                                                 @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
         Long id = gatheringService.createGathering(request, currentUser.getMemberId());
         return ResponseEntity.created(URI.create("/api/gatherings/" + id)).build();
@@ -83,7 +84,7 @@ public class GatheringController {
     })
     public ResponseEntity<Void> updateGathering(
             @Parameter(description = "모임 ID", example = "1") @PathVariable Long id,
-            @RequestBody GatheringUpdateRequest request,
+            @Valid @RequestBody GatheringUpdateRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser) {
         gatheringService.updateGathering(id, request, currentUser.getMemberId());
         return ResponseEntity.ok().build();

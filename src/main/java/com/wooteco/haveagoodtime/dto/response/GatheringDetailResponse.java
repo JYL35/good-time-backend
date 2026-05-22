@@ -32,11 +32,19 @@ public record GatheringDetailResponse(
         @Schema(description = "내가 방장인지 여부", example = "false")
         boolean isHost,
 
+        @Schema(description = "내가 참여 중인지 여부", example = "true")
+        boolean isParticipating,
+
         @Schema(description = "현재 참여자 수", example = "3")
         int participantCount
 ) {
 
-    public static GatheringDetailResponse from(Gathering gathering, int participantCount, boolean isHost) {
+    public static GatheringDetailResponse from(
+            Gathering gathering,
+            int participantCount,
+            boolean isHost,
+            boolean isParticipating
+    ) {
         return new GatheringDetailResponse(
                 gathering.getId(),
                 gathering.getName(),
@@ -46,6 +54,7 @@ public record GatheringDetailResponse(
                 gathering.getDescription(),
                 gathering.getStatus(),
                 isHost,
+                isParticipating,
                 participantCount
         );
     }

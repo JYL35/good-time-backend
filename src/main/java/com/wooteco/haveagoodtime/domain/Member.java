@@ -28,4 +28,12 @@ public class Member {
         this.crewNickname = crewNickname;
         this.githubProfileImageUrl = githubProfileImageUrl;
     }
+
+    public void updateCrewNickname(String crewNickname) {
+        this.crewNickname = crewNickname;
+    }
+
+    public void updateGithubProfileImageUrl(String githubProfileImageUrl) {
+        this.githubProfileImageUrl = githubProfileImageUrl;
+    }
 }
