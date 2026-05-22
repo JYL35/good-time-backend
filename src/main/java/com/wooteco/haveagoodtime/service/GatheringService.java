@@ -1,6 +1,7 @@
 package com.wooteco.haveagoodtime.service;
 
 import com.wooteco.haveagoodtime.domain.Gathering;
+import com.wooteco.haveagoodtime.domain.GatheringStatus;
 import com.wooteco.haveagoodtime.domain.Member;
 import com.wooteco.haveagoodtime.domain.Participant;
 import com.wooteco.haveagoodtime.dto.request.GatheringCreateRequest;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -36,10 +38,11 @@ public class GatheringService {
     }
 
     @Transactional(readOnly = true)
-    public GatheringDetailResponse getGathering(Long id) {
+    public GatheringDetailResponse getGathering(Long id, Long currentMemberId) {
         Gathering gathering = findGatheringById(id);
-        int count = participantRepository.findByGathering(gathering).size();
-        return GatheringDetailResponse.from(gathering, count);
+        int count = participantRepository.countByGathering(gathering);
+        boolean isHost = currentMemberId != null && gathering.isHost(currentMemberId);
+        return GatheringDetailResponse.from(gathering, count, isHost);
     }
 
     public Long createGathering(GatheringCreateRequest request, Long hostId) {
@@ -70,15 +73,26 @@ public class GatheringService {
 
     public void participate(Long id, Long memberId) {
         Gathering gathering = findGatheringById(id);
+        if (gathering.getStatus() != GatheringStatus.RECRUITING) {
+            throw new HaveagoodtimeException("모집 중인 모임에만 참여할 수 있습니다.", HttpStatus.BAD_REQUEST);
+        }
         Member member = findMemberById(memberId);
         if (participantRepository.existsByGatheringAndMember(gathering, member)) {
             throw new HaveagoodtimeException("이미 참여한 모임입니다.", HttpStatus.CONFLICT);
         }
         participantRepository.save(new Participant(gathering, member));
+
+        int currentCount = participantRepository.countByGathering(gathering);
+        if (currentCount >= gathering.getHeadCount()) {
+            gathering.match();
+        }
     }
 
     public void cancelParticipation(Long id, Long memberId) {
         Gathering gathering = findGatheringById(id);
+        if (gathering.getStatus() != GatheringStatus.RECRUITING) {
+            throw new HaveagoodtimeException("모집 중인 모임에서만 참여를 취소할 수 있습니다.", HttpStatus.BAD_REQUEST);
+        }
         Member member = findMemberById(memberId);
         Participant participant = participantRepository.findByGatheringAndMember(gathering, member)
                 .orElseThrow(() -> new HaveagoodtimeException("참여하지 않은 모임입니다.", HttpStatus.NOT_FOUND));
@@ -88,8 +102,12 @@ public class GatheringService {
     @Transactional(readOnly = true)
     public List<ParticipantResponse> getParticipants(Long id) {
         Gathering gathering = findGatheringById(id);
-        return participantRepository.findByGathering(gathering).stream()
-                .map(ParticipantResponse::from)
+        List<Participant> participants = participantRepository.findByGatheringOrderByJoinTime(gathering);
+        boolean revealed = gathering.getStatus() == GatheringStatus.MATCHED;
+
+        AtomicInteger index = new AtomicInteger(1);
+        return participants.stream()
+                .map(p -> ParticipantResponse.of(p, index.getAndIncrement(), revealed))
                 .toList();
     }
 

@@ -10,9 +10,11 @@ import java.util.Optional;
 
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
 
-    List<Participant> findByGathering(Gathering gathering);
+    List<Participant> findByGatheringOrderByJoinTime(Gathering gathering);
 
     Optional<Participant> findByGatheringAndMember(Gathering gathering, Member member);
 
     boolean existsByGatheringAndMember(Gathering gathering, Member member);
+
+    int countByGathering(Gathering gathering);
 }

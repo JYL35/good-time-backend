@@ -4,12 +4,12 @@ import com.wooteco.haveagoodtime.domain.Participant;
 
 import java.time.LocalDateTime;
 
-public record ParticipantResponse(Long memberId, String crewNickname, LocalDateTime joinTime) {
+public record ParticipantResponse(String alias, String crewNickname, LocalDateTime joinTime) {
 
-    public static ParticipantResponse from(Participant participant) {
+    public static ParticipantResponse of(Participant participant, int index, boolean revealed) {
         return new ParticipantResponse(
-                participant.getMember().getId(),
-                participant.getMember().getCrewNickname(),
+                "크루 #" + index,
+                revealed ? participant.getMember().getCrewNickname() : null,
                 participant.getJoinTime()
         );
     }

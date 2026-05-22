@@ -28,8 +28,11 @@ public class GatheringController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GatheringDetailResponse> getGathering(@PathVariable Long id) {
-        return ResponseEntity.ok(gatheringService.getGathering(id));
+    public ResponseEntity<GatheringDetailResponse> getGathering(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomOAuth2User currentUser) {
+        Long memberId = currentUser != null ? currentUser.getMemberId() : null;
+        return ResponseEntity.ok(gatheringService.getGathering(id, memberId));
     }
 
     @PostMapping

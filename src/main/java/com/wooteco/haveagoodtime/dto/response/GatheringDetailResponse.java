@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 public record GatheringDetailResponse(Long id, String name, int headCount,
                                       LocalDateTime gatheringDatetime, LocalDateTime dueDate,
                                       String description, GatheringStatus status,
-                                      Long hostId, int participantCount) {
+                                      boolean isHost, int participantCount) {
 
-    public static GatheringDetailResponse from(Gathering gathering, int participantCount) {
+    public static GatheringDetailResponse from(Gathering gathering, int participantCount, boolean isHost) {
         return new GatheringDetailResponse(
                 gathering.getId(),
                 gathering.getName(),
@@ -19,7 +19,7 @@ public record GatheringDetailResponse(Long id, String name, int headCount,
                 gathering.getDueDate(),
                 gathering.getDescription(),
                 gathering.getStatus(),
-                gathering.getHost().getId(),
+                isHost,
                 participantCount
         );
     }
